@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ramen Log</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#22315A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ramen Log">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --indigo:#22315A; --paper:#EEF0F3; --card:#FFFFFF; --ink:#1E2230; --muted:#5E6577;
+  --yolk:#F2A900; --naruto:#E85D8A; --line:#D5D9E2;
+  --broth:#D9892B; --top:#E85D8A; --noodle:#E9C46A; --side:#5B9A6E;
+  --display:"Dela Gothic One","Arial Black",system-ui,sans-serif;
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --indigo:#2C3D6E; --paper:#151926; --card:#1F2435; --ink:#ECEEF4; --muted:#9AA1B4; --line:#323A52;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --indigo:#2C3D6E; --paper:#151926; --card:#1F2435; --ink:#ECEEF4; --muted:#9AA1B4; --line:#323A52;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--yolk);outline-offset:2px}
+
+/* noren header */
+header{background:var(--indigo);color:#fff;padding:18px 20px 26px;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:14px;
+  background:repeating-linear-gradient(90deg,var(--indigo) 0 calc(25% - 3px),transparent calc(25% - 3px) 25%);}
+.head-row{max-width:640px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:2.1rem;line-height:1;margin:0;letter-spacing:.01em}
+h1 small{display:block;font-family:var(--body);font-size:.9rem;font-weight:500;opacity:.75;margin-top:6px;letter-spacing:0}
+.count{font-family:var(--display);font-size:2.4rem;line-height:1;color:var(--yolk)}
+
+main{max-width:640px;margin:0 auto;padding:22px 16px 110px}
+
+.sort{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin:0 -2px;scrollbar-width:none}
+.sort::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:.92rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+.list{display:flex;flex-direction:column;gap:12px}
+.shop{display:grid;grid-template-columns:76px 1fr auto;gap:14px;align-items:center;background:var(--card);
+  border-radius:18px;padding:14px;border:1px solid var(--line);text-align:left;width:100%}
+.shop h2{margin:0;font-size:1.08rem;font-weight:700;line-height:1.25}
+.shop .meta{color:var(--muted);font-size:.86rem;margin-top:2px}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
+.bars span{height:5px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.bars span i{position:absolute;inset:0 auto 0 0;border-radius:3px}
+.score{font-family:var(--display);font-size:1.9rem;line-height:1}
+.score small{display:block;font-family:var(--body);font-size:.72rem;color:var(--muted);text-align:right;margin-top:3px}
+
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty svg{width:140px;height:140px;margin-bottom:10px}
+.empty strong{display:block;color:var(--ink);font-size:1.15rem;margin-bottom:4px}
+
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--yolk);color:#1E2230;
+  border:none;border-radius:999px;padding:15px 22px;font-weight:700;font-size:1rem;box-shadow:0 6px 18px rgba(34,49,90,.35);display:flex;align-items:center;gap:8px}
+.fab svg{width:20px;height:20px}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;display:none}
+.sheet.open{display:block}
+.scrim{position:absolute;inset:0;background:rgba(15,20,35,.55)}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;background:var(--card);border-radius:24px 24px 0 0;
+  padding:10px 20px calc(24px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+.panel h3{font-family:var(--display);font-weight:400;font-size:1.5rem;margin:0 0 14px;line-height:1.15}
+label.f{display:block;font-weight:500;font-size:.9rem;margin:12px 0 5px}
+input[type=text],input[type=date],textarea{width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px}
+textarea{min-height:76px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.cat{margin-top:18px}
+.cat-head{display:flex;justify-content:space-between;align-items:baseline}
+.cat-head b{font-size:1rem;display:flex;align-items:center;gap:8px}
+.cat-head b::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
+.cat-head span{color:var(--muted);font-size:.86rem}
+.taps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:7px}
+.taps button{border:1.5px solid var(--line);background:var(--paper);border-radius:12px;padding:11px 0;font-weight:700;font-size:1.05rem}
+.taps button.on{background:var(--c);border-color:var(--c);color:#1E2230}
+
+.live{display:flex;align-items:center;gap:16px;margin-top:22px;padding:14px;border-radius:16px;background:var(--paper)}
+.live svg{width:84px;height:84px;flex:none}
+.live .score{font-size:2.4rem}
+.actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;border-radius:14px;padding:14px;font-weight:700;border:1.5px solid var(--line);background:var(--card)}
+.btn.primary{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.btn.danger{flex:none;color:#C2334D;border-color:#C2334D55;background:transparent}
+.err{color:#C2334D;font-size:.88rem;margin-top:6px;min-height:1em}
+
+/* detail */
+.detail-bowl{display:flex;justify-content:center;margin:4px 0 6px}
+.detail-bowl svg{width:180px;height:180px}
+.detail-score{text-align:center;font-family:var(--display);font-size:3rem;line-height:1}
+.detail-score small{display:block;font-family:var(--body);font-size:.85rem;color:var(--muted);margin-top:4px}
+.rows{margin-top:16px;display:grid;gap:8px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;background:var(--paper)}
+.row b{display:flex;align-items:center;gap:8px;font-weight:500}
+.row b::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
+.row span{font-weight:700}
+.note{margin-top:14px;padding:12px;border-left:4px solid var(--yolk);background:var(--paper);border-radius:0 12px 12px 0;white-space:pre-wrap}
+.sync{font-size:.8rem;color:var(--muted);text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-row">
+    <h1>Ramen Log<small>Every bowl, scored four ways</small></h1>
+    <div class="count" id="count" aria-label="Places rated">0</div>
+  </div>
+</header>
+
+<main>
+  <div class="sort" role="group" aria-label="Sort by" id="sort"></div>
+  <div class="list" id="list"></div>
+</main>
+
+<button class="fab" id="addBtn" aria-label="Rate a ramen place">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  Rate a bowl
+</button>
+
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel" role="dialog" aria-modal="true" id="panel"></div>
+</div>
+
+<script>
+const CATS=[
+  {k:"broth",label:"Broth",c:"var(--broth)",hint:["Thin","Flat","Decent","Rich","Unreal"]},
+  {k:"toppings",label:"Toppings",c:"var(--top)",hint:["Sad","Sparse","Solid","Great","Perfect"]},
+  {k:"noodles",label:"Noodles",c:"var(--noodle)",hint:["Mushy","Meh","Good","Springy","Perfect"]},
+  {k:"sides",label:"Sides",c:"var(--side)",hint:["Skip","Meh","Fine","Good","Order twice"]}
+];
+const SORTS=[{k:"overall",label:"Best overall"},{k:"recent",label:"Recent"},...CATS.map(c=>({k:c.k,label:"Best "+c.label.toLowerCase()}))];
+const LS_KEY="ramen-log-v1";
+let places=[], sortBy="overall";
+
+/* ---------- storage ---------- */
+function lsLoad(){try{const v=localStorage.getItem(LS_KEY);return v?JSON.parse(v):null}catch(e){return null}}
+function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify(places))}catch(e){}}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const overall=p=>{const v=CATS.map(c=>p[c.k]).filter(Boolean);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0};
+const fmt=n=>n?n.toFixed(1):"–";
+const today=()=>new Date().toISOString().slice(0,10);
+const niceDate=d=>{if(!d)return"";const t=new Date(d+"T12:00:00");return isNaN(t)?"":t.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})};
+
+/* bowl: four wedges whose radius grows with each score */
+function bowl(p,size=100){
+  const cx=50,cy=50,R=44,r0=9;
+  let s=`<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="${R+3}" fill="var(--paper)" stroke="var(--line)" stroke-width="1.5"/>`;
+  CATS.forEach((c,i)=>{
+    const v=p[c.k]||0, rr=r0+(R-r0)*(v/5);
+    const a0=(-90+i*90+2)*Math.PI/180, a1=(-90+(i+1)*90-2)*Math.PI/180;
+    const ghost=`M${cx} ${cy} L${cx+R*Math.cos(a0)} ${cy+R*Math.sin(a0)} A${R} ${R} 0 0 1 ${cx+R*Math.cos(a1)} ${cy+R*Math.sin(a1)} Z`;
+    s+=`<path d="${ghost}" fill="${c.c}" opacity=".13"/>`;
+    if(v){s+=`<path d="M${cx} ${cy} L${cx+rr*Math.cos(a0)} ${cy+rr*Math.sin(a0)} A${rr} ${rr} 0 0 1 ${cx+rr*Math.cos(a1)} ${cy+rr*Math.sin(a1)} Z" fill="${c.c}"/>`}
+  });
+  // naruto swirl in the middle
+  s+=`<circle cx="50" cy="50" r="8" fill="#fff" stroke="var(--naruto)" stroke-width="1.2"/><path d="M50 50 m0 -1.5 a1.5 1.5 0 1 1 -1.5 1.5 a3 3 0 1 1 3 3 a4.5 4.5 0 1 1 -4.5 -4.5" fill="none" stroke="var(--naruto)" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+  return s;
+}
+
+/* ---------- list ---------- */
+function renderSort(){
+  document.getElementById("sort").innerHTML=SORTS.map(s=>`<button class="chip" aria-pressed="${s.k===sortBy}" data-sort="${s.k}">${s.label}</button>`).join("");
+}
+function render(){
+  document.getElementById("count").textContent=places.length;
+  renderSort();
+  const list=document.getElementById("list");
+  if(!places.length){
+    list.innerHTML=`<div class="empty">${bowl({broth:4,toppings:3,noodles:5,sides:2})}<strong>No bowls yet</strong>Tap “Rate a bowl” after your next ramen run to start your ranking.</div>`;
+    return;
+  }
+  const sorted=[...places].sort((a,b)=>{
+    if(sortBy==="recent") return (b.date||"").localeCompare(a.date||"")||b.created-a.created;
+    if(sortBy==="overall") return overall(b)-overall(a);
+    return (b[sortBy]||0)-(a[sortBy]||0)||overall(b)-overall(a);
+  });
+  list.innerHTML=sorted.map(p=>{
+    const big=sortBy==="overall"||sortBy==="recent"?overall(p):p[sortBy];
+    const lbl=sortBy==="overall"||sortBy==="recent"?"overall":CATS.find(c=>c.k===sortBy).label.toLowerCase();
+    const meta=[p.area,p.dish].filter(Boolean).map(esc).join(", ")||niceDate(p.date);
+    return `<button class="shop" data-id="${p.id}">
+      ${bowl(p)}
+      <div><h2>${esc(p.name)}</h2><div class="meta">${meta}</div>
+        <div class="bars">${CATS.map(c=>`<span title="${c.label}"><i style="width:${(p[c.k]||0)*20}%;background:${c.c}"></i></span>`).join("")}</div>
+      </div>
+      <div class="score">${fmt(big)}<small>${lbl}</small></div>
+    </button>`;
+  }).join("");
+}
+
+/* ---------- sheet ---------- */
+const sheet=document.getElementById("sheet"), panel=document.getElementById("panel");
+let lastFocus=null;
+function openSheet(html){
+  lastFocus=document.activeElement;
+  panel.innerHTML=`<div class="grab"></div>`+html;
+  sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+  setTimeout(()=>{const f=panel.querySelector("input,button");f&&f.focus({preventScroll:true})},30);
+}
+function closeSheet(){sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.style.overflow="";lastFocus&&lastFocus.focus()}
+sheet.addEventListener("click",e=>{if(e.target.hasAttribute("data-close"))closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet.classList.contains("open"))closeSheet()});
+
+function openForm(p){
+  const d=p?{...p}:{id:"p"+Date.now().toString(36),name:"",area:"",dish:"",date:today(),notes:"",created:Date.now()};
+  openSheet(`
+    <h3>${p?"Edit rating":"Rate a bowl"}</h3>
+    <label class="f" for="fName">Place</label>
+    <input type="text" id="fName" value="${esc(d.name)}" placeholder="Shop name" autocomplete="off">
+    <div class="err" id="fErr"></div>
+    <div class="two">
+      <div><label class="f" for="fArea">Neighborhood</label><input type="text" id="fArea" value="${esc(d.area)}" placeholder="Optional"></div>
+      <div><label class="f" for="fDate">Visited</label><input type="date" id="fDate" value="${esc(d.date)}"></div>
+    </div>
+    <label class="f" for="fDish">What you ordered</label>
+    <input type="text" id="fDish" value="${esc(d.dish)}" placeholder="e.g. Tonkotsu, extra chashu">
+    ${CATS.map(c=>`<div class="cat" style="--c:${c.c}" data-cat="${c.k}">
+      <div class="cat-head"><b>${c.label}</b><span class="hint">${d[c.k]?c.hint[d[c.k]-1]:"Tap to rate"}</span></div>
+      <div class="taps" role="radiogroup" aria-label="${c.label} rating">
+        ${[1,2,3,4,5].map(n=>`<button type="button" role="radio" aria-checked="${d[c.k]===n}" class="${(d[c.k]||0)>=n?"on":""}" data-v="${n}">${n}</button>`).join("")}
+      </div></div>`).join("")}
+    <div class="live"><div id="liveBowl">${bowl(d)}</div><div><div class="score" id="liveScore">${fmt(overall(d))}</div><div style="color:var(--muted);font-size:.86rem">Overall, average of what you rated</div></div></div>
+    <label class="f" for="fNotes">Notes</label>
+    <textarea id="fNotes" placeholder="Go back for the spicy miso, skip the gyoza…">${esc(d.notes)}</textarea>
+    <div class="actions">
+      ${p?`<button class="btn danger" id="fDel">Delete</button>`:""}
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="fSave">Save rating</button>
+    </div>`);
+  panel.querySelectorAll(".cat").forEach(el=>{
+    const k=el.dataset.cat, cat=CATS.find(c=>c.k===k);
+    el.addEventListener("click",e=>{
+      const b=e.target.closest("button[data-v]");if(!b)return;
+      const v=+b.dataset.v; d[k]=d[k]===v?0:v;
+      el.querySelectorAll("button").forEach(x=>{const n=+x.dataset.v;x.classList.toggle("on",d[k]>=n);x.setAttribute("aria-checked",d[k]===n)});
+      el.querySelector(".hint").textContent=d[k]?cat.hint[d[k]-1]:"Tap to rate";
+      document.getElementById("liveBowl").innerHTML=bowl(d);
+      document.getElementById("liveScore").textContent=fmt(overall(d));
+    });
+  });
+  document.getElementById("fSave").onclick=()=>{
+    d.name=document.getElementById("fName").value.trim();
+    if(!d.name){document.getElementById("fErr").textContent="Add the place name to save.";document.getElementById("fName").focus();return}
+    d.area=document.getElementById("fArea").value.trim();
+    d.dish=document.getElementById("fDish").value.trim();
+    d.date=document.getElementById("fDate").value;
+    d.notes=document.getElementById("fNotes").value.trim();
+    const i=places.findIndex(x=>x.id===d.id);
+    if(i>=0)places[i]=d;else places.push(d);
+    persist();render();closeSheet();
+  };
+  const del=document.getElementById("fDel");
+  if(del)del.onclick=()=>{
+    if(del.dataset.armed){places=places.filter(x=>x.id!==d.id);persist();render();closeSheet();return}
+    del.dataset.armed="1";del.textContent="Tap again to delete";
+  };
+}
+
+function openDetail(p){
+  openSheet(`
+    <h3>${esc(p.name)}</h3>
+    <div style="color:var(--muted);margin-top:-8px">${[p.area,niceDate(p.date)].filter(Boolean).map(esc).join(", ")}</div>
+    <div class="detail-bowl">${bowl(p)}</div>
+    <div class="detail-score">${fmt(overall(p))}<small>overall out of 5</small></div>
+    ${p.dish?`<p style="text-align:center;margin:10px 0 0">Ordered: <b>${esc(p.dish)}</b></p>`:""}
+    <div class="rows">${CATS.map(c=>`<div class="row" style="--c:${c.c}"><b>${c.label}</b><span>${p[c.k]?p[c.k]+" / 5, "+c.hint[p[c.k]-1].toLowerCase():"Not rated"}</span></div>`).join("")}</div>
+    ${p.notes?`<div class="note">${esc(p.notes)}</div>`:""}
+    <div class="actions"><button class="btn" data-close>Close</button><button class="btn primary" id="dEdit">Edit rating</button></div>`);
+  document.getElementById("dEdit").onclick=()=>openForm(p);
+}
+
+document.getElementById("addBtn").onclick=()=>openForm(null);
+document.getElementById("sort").addEventListener("click",e=>{const b=e.target.closest("[data-sort]");if(b){sortBy=b.dataset.sort;render()}});
+document.getElementById("list").addEventListener("click",e=>{const b=e.target.closest(".shop");if(b){const p=places.find(x=>x.id===b.dataset.id);p&&openDetail(p)}});
+
+places=lsLoad()||[];
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
